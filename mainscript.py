@@ -8,7 +8,7 @@ st.set_page_config(
     layout = 'wide'
 )
 
-@st.cache
+@st.cache_data
 def get_data_from_excel():
     df = pd.read_excel(
         io = 'supermarkt_sales.xlsx',
@@ -95,8 +95,6 @@ fig_product_sales.update_layout(
     xaxis = (dict(showgrid = False))
 )
 
-st.plotly_chart(fig_product_sales)
-
 
 # Sales by Hours [Bar Chart]
 sales_by_hour = df_selection.groupby(by=["hour"]).sum()[["Total"]]
@@ -115,4 +113,18 @@ fig_hourly_sales.update_layout(
     yaxis = dict(showgrid = False)
 )
 
-st.plotly_chart(fig_hourly_sales)
+
+left_column, right_column = st.columns(2)
+left_column.plotly_chart(fig_hourly_sales, use_container_width=True)
+right_column.plotly_chart(fig_product_sales, use_container_width=True)
+
+# ---- Hide Streamlit Style ----
+hide_st_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        </style>
+        """
+
+st.markdown(hide_st_style, unsafe_allow_html=True)
