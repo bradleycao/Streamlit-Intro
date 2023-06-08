@@ -8,15 +8,22 @@ st.set_page_config(
     layout = 'wide'
 )
 
-df = pd.read_excel(
-    io = 'supermarkt_sales.xlsx',
-    engine = 'openpyxl',
-    sheet_name = 'Sales',
-    skiprows = 3,
-    usecols = 'B:R',
-    nrows = 1000
-)
+@st.cache
+def get_data_from_excel():
+    df = pd.read_excel(
+        io = 'supermarkt_sales.xlsx',
+        engine = 'openpyxl',
+        sheet_name = 'Sales',
+        skiprows = 3,
+        usecols = 'B:R',
+        nrows = 1000
+    )
 
+    # Add 'hour' column to dataframe
+    df["hour"] = pd.to_datetime(df["Time"], format = "%H:%M:%S").dt.hour
+    return df
+
+df = get_data_from_excel()
 
 # ----- Sidebar -----
 st.sidebar.header("Please filter here: ")
@@ -83,4 +90,29 @@ fig_product_sales = px.bar(
     template = "plotly_white"
 )
 
+fig_product_sales.update_layout(
+    plot_bgcolor = "rgba(0,0,0,0)",
+    xaxis = (dict(showgrid = False))
+)
+
 st.plotly_chart(fig_product_sales)
+
+
+# Sales by Hours [Bar Chart]
+sales_by_hour = df_selection.groupby(by=["hour"]).sum()[["Total"]]
+fig_hourly_sales = px.bar(
+    sales_by_hour,
+    x=sales_by_hour.index,
+    y="Total",
+    title="<b>Sales by hour</b>",
+    color_discrete_sequence=["#0083B8"] * len(sales_by_hour),
+    template="plotly_white" 
+)
+
+fig_hourly_sales.update_layout(
+    xaxis = dict(tickmode="linear"),
+    plot_bgcolor = "rgba(0,0,0,0)",
+    yaxis = dict(showgrid = False)
+)
+
+st.plotly_chart(fig_hourly_sales)
